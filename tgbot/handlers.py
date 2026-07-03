@@ -26,8 +26,8 @@ Yeh channel bilkul <b>FREE</b> hai.
 /getapk - Verified hone par hack APK milega
 """
 
-# Aapki final working Telegram Voice File ID
-VOICE_FILE_ID = "CQACAgUAAxkBAAFOI89qSCLIzJ69hkwHLzw7juL1_uAp7wAC4CIAAmXWQFa2p41-fjAp-zwE"
+# Aapki final working Catbox URL Link
+VOICE_URL = "https://files.catbox.moe/xs2289.mp3"
 
 def setup_handlers(bot_instance):
     
@@ -35,15 +35,19 @@ def setup_handlers(bot_instance):
     @router.message(Command("start"))
     async def start_command(message: types.Message):
         try:
+            # Welcome Text bhejein (Safe HTML)
             await message.answer(WELCOME_TEXT, parse_mode="HTML", disable_web_page_preview=True)
+            
+            # Voice Note via URL (Makhan ki tarah chalega)
             try:
-                await message.answer_voice(voice=VOICE_FILE_ID)
+                await message.answer_voice(voice=VOICE_URL)
             except Exception as voice_err:
                 print(f"❌ Voice send fail: {voice_err}")
+                
         except Exception as e:
             print(f"❌ Critical start_command error: {e}")
             await message.answer(f"⚠️ API Error: {str(e)}")
-
+    
     # 2. Verify Command Handler
     @router.message(Command("verify"))
     async def verify_command(message: types.Message):
