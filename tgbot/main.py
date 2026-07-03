@@ -1,8 +1,7 @@
-import asyncio
 import gspread
 from aiogram import Bot, Dispatcher, types
 from google.oauth2.service_account import Credentials
-from .config import BOT_TOKEN, GOOGLE_SHEET_ID, GOOGLE_CREDS_DICT, WEBHOOK_URL
+from .config import BOT_TOKEN, GOOGLE_SHEET_ID, GOOGLE_CREDS_DICT
 from .handlers import setup_handlers
 
 class TGBot:
@@ -22,48 +21,35 @@ class TGBot:
             except Exception as e:
                 print(f"⚠️ Google Sheet connection failed: {e}")
         else:
-            print("⚠️ Google Sheets credentials missing. Bot will run without sheet access.")
+            print("⚠️ Google Sheets credentials missing.")
         
         # Handlers setup
         router = setup_handlers(self)
         self.dp.include_router(router)
-        
-        # Webhook set karein (sirf local ya first deploy mein)
-        if WEBHOOK_URL and "vercel" in WEBHOOK_URL:
-            try:
-                # Event loop handle karein
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(self.set_webhook())
-                print(f"✅ Webhook set to: {WEBHOOK_URL}")
-            except Exception as e:
-                print(f"⚠️ Webhook setup failed: {e}")
-    
-    async def set_webhook(self):
-        if WEBHOOK_URL:
-            await self.bot.set_webhook(WEBHOOK_URL)
     
     async def update_bot(self, update_dict: dict):
-        """Update ko process karein - safe version"""
+        """Update received via Webhook route processed dynamically"""
         try:
             update = types.Update(**update_dict)
-            # Aiogram ke feed_update ko call karein
             await self.dp.feed_update(self.bot, update)
         except Exception as e:
             print(f"❌ update_bot error: {e}")
-            raise e  # Error ko upar bhejein
-    
+            raise e
+            
     def verify_uid(self, uid: str) -> bool:
         """Check if UID exists in Google Sheet Column A"""
         if not self.sheet:
             print("❌ Sheet not available")
             return False
         try:
+            # Local iteration inside serverless timeline bounds
             uid_column = self.sheet.col_values(1)
-            return uid in uid_column
+            # String parsing standardization
+            cleaned_column = [str(x).strip() for x in uid_column]
+            return str(uid).strip() in cleaned_column
         except Exception as e:
             print(f"Google Sheet Error: {e}")
             return False
 
-# Singleton instance
+# Singleton instance initialized cleanly
 tgbot = TGBot()

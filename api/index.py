@@ -1,6 +1,6 @@
+import json
 from fastapi import FastAPI, Request, Response
 from tgbot.main import tgbot
-import json
 
 app = FastAPI()
 
@@ -11,14 +11,14 @@ async def webhook(request: Request):
         update_data = await request.json()
         print(f"📩 Received update: {update_data.get('update_id', 'unknown')}")
         
-        # Update ko directly process karo (background task nahi)
+        # Update ko process karein
         await tgbot.update_bot(update_data)
         print("✅ Update processed successfully")
         return {"status": "ok"}
         
     except Exception as e:
         print(f"❌ Webhook error: {e}")
-        # Telegram ko batayein ki request received hai, lekin process nahi hui
+        # Telegram ko fail response mat bhejein warna wo baar-baar retry karega
         return Response(status_code=200, content=json.dumps({"status": "error", "message": str(e)}))
 
 @app.get("/")
@@ -28,6 +28,3 @@ async def root():
 @app.get("/api/bot")
 async def get_method_not_allowed():
     return {"error": "Method not allowed. Use POST for webhook."}
-
-# Vercel serverless function ke liye handler
-handler = app
