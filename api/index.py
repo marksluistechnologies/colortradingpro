@@ -12,3 +12,6 @@ async def webhook(request: Request):
 @app.get("/")
 async def root():
     return {"message": "Bot is running!"}
+
+# Vercel serverless function ke liye handler
+handler = app
