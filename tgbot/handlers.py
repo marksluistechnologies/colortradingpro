@@ -45,6 +45,8 @@ async def start_command(message: types.Message):
             os.unlink(tmp.name)
     except Exception as e:
         print(f"Voice Error: {e}")
+        # Agar voice fail ho toh sirf text bhejo
+        await message.answer("📢 Welcome! (Voice note generate nahi ho paaya, lekin aap /help use kar sakte hain)")
 
 @router.message(Command("verify"))
 async def verify_command(message: types.Message):
