@@ -23,7 +23,7 @@ Yeh channel bilkul <b>FREE</b> hai.
 📌 <b>Commands:</b>
 /start - Welcome message
 /verify [UID] - Apni UID verify karayein
-/getapk - Verified hone par hack APK milega
+/getapk [UID] - Verified hone par hack APK milega
 """
 
 # Aapki final working Catbox URL Link
@@ -38,7 +38,7 @@ def setup_handlers(bot_instance):
             # Welcome Text bhejein (Safe HTML)
             await message.answer(WELCOME_TEXT, parse_mode="HTML", disable_web_page_preview=True)
             
-            # Voice Note via URL (Makhan ki tarah chalega)
+            # Voice Note via URL
             try:
                 await message.answer_voice(voice=VOICE_URL)
             except Exception as voice_err:
@@ -59,16 +59,40 @@ def setup_handlers(bot_instance):
             
             uid = args[1]
             if bot_instance.verify_uid(uid):
-                await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk use karein hack APK ke liye.")
+                await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk {uid} use karein hack APK ke liye.")
             else:
-                await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web")
+                await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\n\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web\n\n Phir apni UID DM karein @tech_jadugar ko.")
         except Exception as e:
             print(f"❌ verify_command error: {e}")
             await message.answer(f"⚠️ Verification Error: {str(e)}")
             
-    # 3. GetAPK Command Handler
+    # 3. GetAPK Command Handler (With UID Check Logic)
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
-        await message.answer("⚠️ APK file currently unavailable. Please contact admin @tech_jadugar")
+        try:
+            args = message.text.split()
+            
+            # Agar user ne UID nahi bheji
+            if len(args) < 2:
+                await message.answer("❌ APK download karne ke liye apni UID sath mein bhejein.\nFormat: <b>/getapk 12345</b>", parse_mode="HTML")
+                return
+                
+            uid = args[1]
+            
+            # Google Sheet mein check karein ki UID verified hai ya nahi
+            if bot_instance.verify_uid(uid):
+                # Agar UID mil gayi (Verified User)
+                await message.answer("⚠️ APK file currently unavailable. Please contact admin @tech_jadugar")
+            else:
+                # Agar UID nahi mili (Unverified User)
+                await message.answer(
+                    "❌ Aapki UID verified nahi hai! Pehle hamare link se register karke UID @tech_jadugar ko verify karwaye, tab jaa kar aap hack download kar paenge.\n\n"
+                    "🔗 Register Link: https://13lgame18.com/register?inviteCode=HTJ65XW&from=web", 
+                    parse_mode="HTML", 
+                    disable_web_page_preview=True
+                )
+        except Exception as e:
+            print(f"❌ get_apk_command error: {e}")
+            await message.answer(f"⚠️ Error: {str(e)}")
             
     return router
