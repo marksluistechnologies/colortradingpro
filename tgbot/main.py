@@ -1,21 +1,17 @@
 import asyncio
 import gspread
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import FSInputFile
 from google.oauth2.service_account import Credentials
-from gtts import gTTS
-import os
-import tempfile
 from .config import BOT_TOKEN, GOOGLE_SHEET_ID, GOOGLE_CREDS_DICT, WEBHOOK_URL
-from .handlers import router
+from .handlers import setup_handlers  # router nahi, setup_handlers function import karo
 
 class TGBot:
     def __init__(self):
         self.bot = Bot(token=BOT_TOKEN)
         self.dp = Dispatcher()
-        self.dp.include_router(router)
+        self.sheet = None
         
-        # Google Sheets Setup - Sirf tabhi agar credentials available hain
+        # Google Sheets Setup
         if GOOGLE_CREDS_DICT and GOOGLE_SHEET_ID:
             try:
                 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -24,25 +20,26 @@ class TGBot:
                 self.sheet = self.gc.open_by_key(GOOGLE_SHEET_ID).sheet1
                 print("✅ Google Sheet connected successfully!")
             except Exception as e:
-                print(f"❌ Google Sheet connection failed: {e}")
-                self.sheet = None
+                print(f"⚠️ Google Sheet connection failed: {e}")
         else:
             print("⚠️ Google Sheets credentials missing. Bot will run without sheet access.")
-            self.sheet = None
+        
+        # Handlers ko setup karein - self pass karein
+        router = setup_handlers(self)
+        self.dp.include_router(router)
         
         # Webhook set karein
         try:
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.set_webhook())
+            if WEBHOOK_URL:
+                loop.run_until_complete(self.set_webhook())
         except Exception as e:
-            print(f"⚠️ Webhook setup failed (maybe already set): {e}")
+            print(f"⚠️ Webhook setup failed: {e}")
     
     async def set_webhook(self):
         if WEBHOOK_URL:
             await self.bot.set_webhook(WEBHOOK_URL)
             print(f"✅ Webhook set to: {WEBHOOK_URL}")
-        else:
-            print("⚠️ WEBHOOK_URL not set, skipping webhook setup")
     
     async def update_bot(self, update_dict: dict):
         update = types.Update(**update_dict)
@@ -54,11 +51,11 @@ class TGBot:
             print("❌ Sheet not available")
             return False
         try:
-            uid_column = self.sheet.col_values(1)  # Column A
+            uid_column = self.sheet.col_values(1)
             return uid in uid_column
         except Exception as e:
             print(f"Google Sheet Error: {e}")
             return False
 
-# Singleton instance
+# Singleton instance - ab circular import nahi hai
 tgbot = TGBot()
