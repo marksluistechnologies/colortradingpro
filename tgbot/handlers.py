@@ -5,12 +5,11 @@ from aiogram.types import FSInputFile
 
 router = Router()
 
-# HTML formatting safe hoti hai aur parse_mode="HTML" use karne par crash nahi karti
 WELCOME_TEXT = """
 <b>🎉 Colour Trading Pro - Family Mein Swagat Hai!</b>
 
 📌 <b>Sabse Pehle Aur Sabse Zaroori Baat:</b>
-Yeh channel <u>bilkul FREE</u> hai.
+Yeh channel bilkul <b>FREE</b> hai.
 
 🔥 <b>Hamara Unique System:</b>
 ✅ Accurate Signals - Green/Red/Violet prediction
@@ -33,20 +32,29 @@ def setup_handlers(bot_instance):
     @router.message(Command("start"))
     async def start_command(message: types.Message):
         try:
-            # Safe HTML parsing use kar rahe hain taaki special characters crash na karein
+            # 1. Welcome Text bhejein
             await message.answer(WELCOME_TEXT, parse_mode="HTML", disable_web_page_preview=True)
             
-            # Voice Note logic (isolated)
+            # 2. Dynamic Root Path nikalyein (Yeh hamesha project ke root tak le jayega)
+            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            voice_path = os.path.join(BASE_DIR, "voice.mp3")
+            
+            # Voice Note logic
             try:
-                if os.path.exists("voice.mp3"):
-                    voice = FSInputFile("voice.mp3")
+                if os.path.exists(voice_path):
+                    voice = FSInputFile(voice_path)
                     await message.answer_voice(voice)
+                else:
+                    # Agar abhi bhi path galat ho toh debug message admin ko dikhe (testing ke liye)
+                    print(f"⚠️ Voice file not found at: {voice_path}")
+                    # Aap chahein toh temporary check ke liye niche waali line uncomment kar sakte hain:
+                    # await message.answer(f"🔍 Debug Path Info: File nahi mili is jagah: {voice_path}")
             except Exception as voice_err:
-                print(f"⚠️ Voice note error: {voice_err}")
+                print(f"⚠️ Voice note sending error: {voice_err}")
+                await message.answer(f"⚠️ Voice Error: {str(voice_err)}")
                 
         except Exception as e:
             print(f"❌ Critical start_command error: {e}")
-            # Agar abhi bhi koi galti ho toh actual error chat mein dikhega taaki hume pata chale exact dikkat kya hai
             await message.answer(f"⚠️ API Error: {str(e)}")
     
     @router.message(Command("verify"))
@@ -69,8 +77,11 @@ def setup_handlers(bot_instance):
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
         try:
-            if os.path.exists("hack.apk"):
-                apk = FSInputFile("hack.apk")
+            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            apk_path = os.path.join(BASE_DIR, "hack.apk")
+
+            if os.path.exists(apk_path):
+                apk = FSInputFile(apk_path)
                 await message.answer_document(
                     apk,
                     caption="📱 <b>Hack Mod APK</b>\n\nInstructions:\n1. APK install karein\n2. Apni UID daalein\n3. Enjoy! 🚀",
