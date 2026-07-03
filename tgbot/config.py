@@ -9,7 +9,6 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 GOOGLE_SHEET_ID = os.getenv("GOOGLE_SHEET_ID")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# Handle Allowed Users safely
 allowed_users_raw = os.getenv("ALLOWED_USER_IDS", "")
 ALLOWED_USERS = [u.strip() for u in allowed_users_raw.split(",") if u.strip()]
 

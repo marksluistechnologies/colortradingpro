@@ -10,7 +10,6 @@ class TGBot:
         self.dp = Dispatcher()
         self.sheet = None
         
-        # Google Sheets Setup
         if GOOGLE_CREDS_DICT and GOOGLE_SHEET_ID:
             try:
                 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
@@ -23,12 +22,10 @@ class TGBot:
         else:
             print("⚠️ Google Sheets credentials missing.")
         
-        # Handlers setup
         router = setup_handlers(self)
         self.dp.include_router(router)
     
     async def update_bot(self, update_dict: dict):
-        """Update received via Webhook route processed dynamically"""
         try:
             update = types.Update(**update_dict)
             await self.dp.feed_update(self.bot, update)
@@ -37,19 +34,15 @@ class TGBot:
             raise e
             
     def verify_uid(self, uid: str) -> bool:
-        """Check if UID exists in Google Sheet Column A"""
         if not self.sheet:
             print("❌ Sheet not available")
             return False
         try:
-            # Local iteration inside serverless timeline bounds
             uid_column = self.sheet.col_values(1)
-            # String parsing standardization
             cleaned_column = [str(x).strip() for x in uid_column]
             return str(uid).strip() in cleaned_column
         except Exception as e:
             print(f"Google Sheet Error: {e}")
             return False
 
-# Singleton instance initialized cleanly
 tgbot = TGBot()
