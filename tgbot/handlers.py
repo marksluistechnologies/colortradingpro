@@ -1,14 +1,13 @@
 import os
 from aiogram import Router, types
 from aiogram.filters import Command
-from aiogram.types import FSInputFile
 
 router = Router()
 
 WELCOME_TEXT = """
 <b>🎉 Colour Trading Pro - Family Mein Swagat Hai!</b>
 
-📌 <b>Sabse Pehle Aur Sabse Zaroori Baat:</b>
+📌 <b>Sabse Pehle Aur Saabs Zaroori Baat:</b>
 Yeh channel bilkul <b>FREE</b> hai.
 
 🔥 <b>Hamara Unique System:</b>
@@ -27,39 +26,24 @@ Yeh channel bilkul <b>FREE</b> hai.
 /getapk - Verified hone par hack APK milega
 """
 
+# Aapki provide ki gayi valid Telegram Voice File ID
+VOICE_FILE_ID = "CQACAgUAAxkBAAFOI89qSCLIzJ69hkwHLzw7juL1_uAp7wAC4CIAAmXWQFa2p41-fjAp-zwE"
+
 def setup_handlers(bot_instance):
     
     @router.message(Command("start"))
     async def start_command(message: types.Message):
         try:
-            # 1. Welcome Text bhejein
+            # 1. Welcome Text bhejein (Safe HTML)
             await message.answer(WELCOME_TEXT, parse_mode="HTML", disable_web_page_preview=True)
             
-            # 2. Dynamic Root Path nikalyein
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            
-            # Aapke root files ki scanning karein (Case-insensitive check)
-            all_files = os.listdir(BASE_DIR)
-            voice_file_name = None
-            
-            for file in all_files:
-                if file.lower() == "voice.mp3":
-                    voice_file_name = file
-                    break
-            
-            # Voice Note logic
-            if voice_file_name:
-                voice_path = os.path.join(BASE_DIR, voice_file_name)
-                try:
-                    voice = FSInputFile(voice_path)
-                    await message.answer_voice(voice)
-                except Exception as voice_err:
-                    print(f"❌ Voice send fail: {voice_err}")
-                    await message.answer(f"⚠️ Voice Sending Error: {str(voice_err)}")
-            else:
-                # Agar file nahi mili, toh debug list dikhayein taaki pata chale file kahan hai
-                files_found = ", ".join([f for f in all_files if not f.startswith('.')][:10])
-                await message.answer(f"🔍 <b>Debug Info:</b> <code>voice.mp3</code> root par nahi mili.\nRoot folder mein ye files hain: <code>{files_found}</code>", parse_mode="HTML")
+            # 2. Voice Note via File ID (Instant Delivery)
+            try:
+                await message.answer_voice(voice=VOICE_FILE_ID)
+            except Exception as voice_err:
+                print(f"❌ Voice send fail: {voice_err}")
+                # Agar future mein File ID expire ho jaye toh admin ke liye debug log
+                # await message.answer(f"⚠️ Voice Note deliver nahi ho paya: {str(voice_err)}")
                 
         except Exception as e:
             print(f"❌ Critical start_command error: {e}")
@@ -84,7 +68,6 @@ def setup_handlers(bot_instance):
             
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
-        # Kyunki aapne bataya hack.apk abhi nahi hai, directly message de dete hain
         await message.answer("⚠️ APK file currently unavailable. Please contact admin @tech_jadugar")
             
     return router
