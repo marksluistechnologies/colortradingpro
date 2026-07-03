@@ -3,7 +3,7 @@ import gspread
 from aiogram import Bot, Dispatcher, types
 from google.oauth2.service_account import Credentials
 from .config import BOT_TOKEN, GOOGLE_SHEET_ID, GOOGLE_CREDS_DICT, WEBHOOK_URL
-from .handlers import setup_handlers  # router nahi, setup_handlers function import karo
+from .handlers import setup_handlers
 
 class TGBot:
     def __init__(self):
@@ -24,24 +24,27 @@ class TGBot:
         else:
             print("⚠️ Google Sheets credentials missing. Bot will run without sheet access.")
         
-        # Handlers ko setup karein - self pass karein
+        # Handlers setup
         router = setup_handlers(self)
         self.dp.include_router(router)
         
-        # Webhook set karein
+        # Webhook set karein (sirf local ya first deploy mein)
         try:
-            loop = asyncio.get_event_loop()
-            if WEBHOOK_URL:
+            if WEBHOOK_URL and "vercel" in WEBHOOK_URL:
+                # Vercel mein async task ko handle karein
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
                 loop.run_until_complete(self.set_webhook())
+                print(f"✅ Webhook set to: {WEBHOOK_URL}")
         except Exception as e:
             print(f"⚠️ Webhook setup failed: {e}")
     
     async def set_webhook(self):
         if WEBHOOK_URL:
             await self.bot.set_webhook(WEBHOOK_URL)
-            print(f"✅ Webhook set to: {WEBHOOK_URL}")
     
     async def update_bot(self, update_dict: dict):
+        """Update ko process karein"""
         update = types.Update(**update_dict)
         await self.dp.feed_update(self.bot, update)
     
@@ -57,5 +60,5 @@ class TGBot:
             print(f"Google Sheet Error: {e}")
             return False
 
-# Singleton instance - ab circular import nahi hai
+# Singleton instance
 tgbot = TGBot()
