@@ -5,7 +5,6 @@ from gtts import gTTS
 import os
 import tempfile
 
-# router banayein, tgbot ko yahan import nahi karenge
 router = Router()
 
 WELCOME_TEXT = """
@@ -30,35 +29,47 @@ Yeh channel **bilkul FREE** hai.
 /getapk – Verified hone par hack APK milega
 """
 
-# verify_uid function ko alag se define karein, jo main se aayega
 def setup_handlers(bot_instance):
     """Handlers ko bot instance ke saath setup karein"""
     
     @router.message(Command("start"))
     async def start_command(message: types.Message):
-        await message.answer(WELCOME_TEXT, parse_mode="Markdown")
         try:
-            tts = gTTS(text=WELCOME_TEXT[:500], lang="hi", slow=False)
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
-                tts.save(tmp.name)
-                voice = FSInputFile(tmp.name)
-                await message.answer_voice(voice)
-                os.unlink(tmp.name)
+            await message.answer(WELCOME_TEXT, parse_mode="Markdown")
+            
+            # Voice note - try-except ke saath
+            try:
+                tts = gTTS(text=WELCOME_TEXT[:500], lang="hi", slow=False)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as tmp:
+                    tts.save(tmp.name)
+                    voice = FSInputFile(tmp.name)
+                    await message.answer_voice(voice)
+                    os.unlink(tmp.name)
+            except Exception as e:
+                print(f"⚠️ Voice note error: {e}")
+                # Voice note fail ho toh sirf text bhejo
+                await message.answer("📢 Voice note generate nahi ho paaya, lekin aap commands use kar sakte hain.")
+                
         except Exception as e:
-            print(f"Voice Error: {e}")
+            print(f"❌ start_command error: {e}")
+            await message.answer("⚠️ Kuch technical issue hai. Please try again later.")
     
     @router.message(Command("verify"))
     async def verify_command(message: types.Message):
-        args = message.text.split()
-        if len(args) < 2:
-            await message.answer("❌ UID likh kar bhejein. Format: `/verify 12345`", parse_mode="Markdown")
-            return
-        
-        uid = args[1]
-        if bot_instance.verify_uid(uid):
-            await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk use karein hack APK ke liye.")
-        else:
-            await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web")
+        try:
+            args = message.text.split()
+            if len(args) < 2:
+                await message.answer("❌ UID likh kar bhejein. Format: `/verify 12345`", parse_mode="Markdown")
+                return
+            
+            uid = args[1]
+            if bot_instance.verify_uid(uid):
+                await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk use karein hack APK ke liye.")
+            else:
+                await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web")
+        except Exception as e:
+            print(f"❌ verify_command error: {e}")
+            await message.answer("⚠️ Kuch technical issue hai. Please try again later.")
     
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
@@ -70,5 +81,8 @@ def setup_handlers(bot_instance):
             )
         except FileNotFoundError:
             await message.answer("⚠️ APK file currently unavailable. Please contact admin @tech_jadugar")
+        except Exception as e:
+            print(f"❌ get_apk_command error: {e}")
+            await message.answer("⚠️ APK file send nahi ho paayi. Please try again later.")
     
     return router

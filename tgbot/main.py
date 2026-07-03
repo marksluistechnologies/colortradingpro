@@ -29,24 +29,29 @@ class TGBot:
         self.dp.include_router(router)
         
         # Webhook set karein (sirf local ya first deploy mein)
-        try:
-            if WEBHOOK_URL and "vercel" in WEBHOOK_URL:
-                # Vercel mein async task ko handle karein
+        if WEBHOOK_URL and "vercel" in WEBHOOK_URL:
+            try:
+                # Event loop handle karein
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 loop.run_until_complete(self.set_webhook())
                 print(f"✅ Webhook set to: {WEBHOOK_URL}")
-        except Exception as e:
-            print(f"⚠️ Webhook setup failed: {e}")
+            except Exception as e:
+                print(f"⚠️ Webhook setup failed: {e}")
     
     async def set_webhook(self):
         if WEBHOOK_URL:
             await self.bot.set_webhook(WEBHOOK_URL)
     
     async def update_bot(self, update_dict: dict):
-        """Update ko process karein"""
-        update = types.Update(**update_dict)
-        await self.dp.feed_update(self.bot, update)
+        """Update ko process karein - safe version"""
+        try:
+            update = types.Update(**update_dict)
+            # Aiogram ke feed_update ko call karein
+            await self.dp.feed_update(self.bot, update)
+        except Exception as e:
+            print(f"❌ update_bot error: {e}")
+            raise e  # Error ko upar bhejein
     
     def verify_uid(self, uid: str) -> bool:
         """Check if UID exists in Google Sheet Column A"""
