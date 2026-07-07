@@ -26,8 +26,12 @@ Yeh channel bilkul <b>FREE</b> hai.
 /getapk [UID] - Verified hone par hack APK milega
 """
 
-# Aapki final working Catbox URL Link
+# Aapki final working Catbox URL Link (Voice Note)
 VOICE_URL = "https://files.catbox.moe/xs2289.mp3"
+
+# Aapki final working Catbox URL Link (APK File)
+APK_URL = "https://files.catbox.moe/uxlk3s.apk" 
+APK_CAPTION = "🔥 <b>Colour Trading Pro Hack APK (v3.2)</b>\n\n✅ 100% Anti-Ban\n✅ Accurate Predictions\n\nInstall karein aur enjoy karein!"
 
 def setup_handlers(bot_instance):
     
@@ -61,12 +65,12 @@ def setup_handlers(bot_instance):
             if bot_instance.verify_uid(uid):
                 await message.answer(f"✅ Verified! UID: {uid}\nAb /getapk {uid} use karein hack APK ke liye.")
             else:
-                await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\n\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web\n\n Phir apni UID DM karein @tech_jadugar ko.")
+                await message.answer("❌ UID nahi mili. Pehle hamare link se register karein:\n\nhttps://13lgame18.com/register?inviteCode=HTJ65XW&from=web\n\n Phir apni UID DM karein @tech_jadugar ko.", disable_web_page_preview=True)
         except Exception as e:
             print(f"❌ verify_command error: {e}")
             await message.answer(f"⚠️ Verification Error: {str(e)}")
             
-    # 3. GetAPK Command Handler (With UID Check Logic)
+    # 3. GetAPK Command Handler (With UID Check Logic & File Send)
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
         try:
@@ -79,10 +83,22 @@ def setup_handlers(bot_instance):
                 
             uid = args[1]
             
-            # Google Sheet mein check karein ki UID verified hai ya nahi
+            # Google Sheet/Airtable mein check karein ki UID verified hai ya nahi
             if bot_instance.verify_uid(uid):
-                # Agar UID mil gayi (Verified User)
-                await message.answer("⚠️ APK file currently unavailable. Please contact admin @tech_jadugar")
+                # Agar UID mil gayi (Verified User) -> Send APK File
+                await message.answer("🔄 File bheji jaa rahi hai, kripya wait karein...")
+                
+                try:
+                    await message.answer_document(
+                        document=APK_URL,
+                        caption=APK_CAPTION,
+                        parse_mode="HTML"
+                    )
+
+                except Exception as doc_err:
+                    print(f"❌ File send fail: {doc_err}")
+                    await message.answer("⚠️ System overloaded. APK file generate nahi ho paayi. Admin se contact karein: @tech_jadugar")
+                    
             else:
                 # Agar UID nahi mili (Unverified User)
                 await message.answer(
