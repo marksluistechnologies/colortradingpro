@@ -1,6 +1,7 @@
 import os
 from aiogram import Router, types
 from aiogram.filters import Command
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 router = Router()
 
@@ -31,7 +32,7 @@ VOICE_URL = "https://files.catbox.moe/xs2289.mp3"
 
 # Aapki final working Catbox URL Link (APK File)
 APK_URL = "https://files.catbox.moe/uxlk3s.apk" 
-APK_CAPTION = "🔥 <b>Colour Trading Pro Hack APK (v3.2)</b>\n\n✅ 100% Anti-Ban\n✅ Accurate Predictions\n\nInstall karein aur enjoy karein!"
+APK_CAPTION = "🔥 <b>Colour Trading Pro Hack APK (v3.2)</b>\n\n✅ 100% Anti-Ban\n✅ Accurate Predictions\n\n👇 <b>Niche diye gaye button par click karke Install karein:</b>"
 
 def setup_handlers(bot_instance):
     
@@ -70,7 +71,8 @@ def setup_handlers(bot_instance):
             print(f"❌ verify_command error: {e}")
             await message.answer(f"⚠️ Verification Error: {str(e)}")
             
-    # 3. GetAPK Command Handler (With UID Check Logic & File Send)
+    # 3. GetAPK Command Handler (With Inline Button Fix)
+    @message.message(Command("getapk")) # Wait, correction below:
     @router.message(Command("getapk"))
     async def get_apk_command(message: types.Message):
         try:
@@ -85,19 +87,17 @@ def setup_handlers(bot_instance):
             
             # Google Sheet/Airtable mein check karein ki UID verified hai ya nahi
             if bot_instance.verify_uid(uid):
-                # Agar UID mil gayi (Verified User) -> Send APK File
-                await message.answer("🔄 File bheji jaa rahi hai, kripya wait karein...")
+                # Download Button Create Karein
+                download_keyboard = InlineKeyboardMarkup(inline_keyboard=[
+                    [InlineKeyboardButton(text="📥 Download Hack APK Now", url=APK_URL)]
+                ])
                 
-                try:
-                    await message.answer_document(
-                        document=APK_URL,
-                        caption=APK_CAPTION,
-                        parse_mode="HTML"
-                    )
-
-                except Exception as doc_err:
-                    print(f"❌ File send fail: {doc_err}")
-                    await message.answer("⚠️ System overloaded. APK file generate nahi ho paayi. Admin se contact karein: @tech_jadugar")
+                # Message with Button Send Karein
+                await message.answer(
+                    text=APK_CAPTION,
+                    reply_markup=download_keyboard,
+                    parse_mode="HTML"
+                )
                     
             else:
                 # Agar UID nahi mili (Unverified User)
